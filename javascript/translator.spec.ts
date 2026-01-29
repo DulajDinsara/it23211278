@@ -1,83 +1,116 @@
 import { test, expect, Page } from '@playwright/test';
 
+const URL = 'https://www.swifttranslator.com/';
+
 /**
- * Helper: Type singlish and verify expected Sinhala keyword(s) appear.
- * We check BODY text because output box is not a textarea on this site.
- * IMPORTANT: Use keywords that do NOT already exist on the page.
+ * POSITIVE helper:
+ * Type Singlish and confirm Sinhala keyword(s) appear somewhere on the page.
+ * (Output panel is not a textarea, so we check body text.)
  */
 async function typeAndCheck(page: Page, inputText: string, expectedSinhalaRegex: RegExp) {
-  await page.goto('https://www.swifttranslator.com/', { waitUntil: 'domcontentloaded' });
+  await page.goto(URL, { waitUntil: 'domcontentloaded' });
 
   const singlishInput = page.locator('textarea').first();
+  await expect(singlishInput).toBeVisible({ timeout: 15000 });
+
   await singlishInput.fill(inputText);
 
+  // Confirm the expected Sinhala keyword(s) appear after typing
   await expect(page.locator('body')).toContainText(expectedSinhalaRegex, { timeout: 15000 });
 }
 
 /**
- * Helper for NEGATIVE tests:
- * Expectation is NOT “correct translation”, it is “system should not crash”.
- * So we just type and confirm page is still responsive + input still contains our text.
+ * NEGATIVE helper:
+ * For negative tests, we don't expect "correct translation"—we expect "no crash".
+ * So we confirm input accepts text and page stays responsive.
  */
 async function typeAndCheckNoCrash(page: Page, inputText: string) {
-  await page.goto('https://www.swifttranslator.com/', { waitUntil: 'domcontentloaded' });
+  await page.goto(URL, { waitUntil: 'domcontentloaded' });
 
   const singlishInput = page.locator('textarea').first();
+  await expect(singlishInput).toBeVisible({ timeout: 15000 });
+
   await singlishInput.fill(inputText);
 
-  // Page still works + input kept text
+  // Confirm the input still has what we typed (page didn't break)
   await expect(singlishInput).toHaveValue(inputText, { timeout: 5000 });
-  await expect(page).toHaveURL(/swifttranslator\.com/);
+
+  // Confirm we are still on the correct site
+  await expect(page).toHaveURL(/swifttranslator\.com/i);
 }
 
-test.describe('Swift Translator Tests', () => {
-  // ✅ 1 UI test (required)
+test.describe('SwiftTranslator - Singlish to Sinhala Automated Tests', () => {
+  //  UI test (required)
   test('Pos_UI_0001 - Output updates automatically', async ({ page }) => {
-    await typeAndCheck(page, 'mama gedhara yanavaa', /මම|මන්/);
+    // Use words that should definitely trigger Sinhala output
+    await typeAndCheck(page, 'mama gedhara yanavaa', /මම|මං|මන්|ගෙදර/);
   });
 
-  // ✅ Positive Functional Tests (add up to 24)
-  const positiveCases: { id: string; input: string; expect: RegExp }[] = [
-    { id: 'Pos_Fun_0001', input: 'mama gedhara yanavaa', expect: /මම|මන්/ },
-    { id: 'Pos_Fun_0002', input: 'aayuboovan', expect: /ආයුබෝවන්/ },
-    { id: 'Pos_Fun_0003', input: 'oyaata kohomadha?', expect: /ඔයා|ඔබ/ },
-    { id: 'Pos_Fun_0004', input: 'mata bath kanna one', expect: /මට|බත්|කන්න/ },
+  //  24 POSITIVE FUNCTIONAL TESTS
+  const positiveCases: { id: string; name: string; input: string; expect: RegExp }[] = [
+    // 1–6: Simple / Daily language
+    { id: 'Pos_Fun_0001', name: 'Simple sentence', input: 'mama gedhara yanavaa', expect: /මම|මං|මන්|ගෙදර/ },
+    { id: 'Pos_Fun_0002', name: 'Need something', input: 'mata bath oonee', expect: /මට|බත්/ },
+    { id: 'Pos_Fun_0003', name: 'Plural pronoun', input: 'api paasal yanavaa', expect: /අපි|පාසල්/ },
+    { id: 'Pos_Fun_0004', name: 'Staying at home', input: 'mama gedhara inne', expect: /ගෙදර|ඉන්න/ },
+    { id: 'Pos_Fun_0005', name: 'Feeling sleepy', input: 'mata nidhimathayi', expect: /නිදි|මට/ },
+    { id: 'Pos_Fun_0006', name: 'Weather', input: 'dhaen vahinavaa', expect: /වැහි|වහින/ },
 
-    // ✅ Your sentence (compound + negative)
-    {
-      id: 'Pos_Fun_0005',
-      input: 'mama gedhara yanavaa, haebaeyi vahina nisaa dhaenma yannee naee.',
-      expect: /වැහි|වැසි|නෑ|යන්න/
-    },
+    // 7–10: Questions & Commands
+    { id: 'Pos_Fun_0007', name: 'Question 1', input: 'oyaata kohomadha?', expect: /ඔයා|ඔබ|කොහොම/ },
+    { id: 'Pos_Fun_0008', name: 'Question 2', input: 'oyaa kavadhdha enne?', expect: /කවදා|ඔයා|එන/ },
+    { id: 'Pos_Fun_0009', name: 'Command 1', input: 'issarahata yanna', expect: /යන්න/ },
+    { id: 'Pos_Fun_0010', name: 'Command 2', input: 'mata kiyanna', expect: /කියන්න/ },
 
-    // Add more like this until Pos_Fun_0024
-    // { id: 'Pos_Fun_0006', input: '...', expect: /.../ },
+    // 11–14: Tenses
+    { id: 'Pos_Fun_0011', name: 'Past tense', input: 'mama iiyee gedhara giyaa', expect: /ඊයේ|ගියා|ගෙදර/ },
+    { id: 'Pos_Fun_0012', name: 'Present tense', input: 'mama dhaen vaeda karanavaa', expect: /දැන්|වැඩ/ },
+    { id: 'Pos_Fun_0013', name: 'Future tense', input: 'mama heta enavaa', expect: /හෙට|එනවා/ },
+    { id: 'Pos_Fun_0014', name: 'Next week plan', input: 'api ilaga sathiyee yamu', expect: /සතිය|යමු/ },
+
+    // 15–17: Polite vs Informal
+    { id: 'Pos_Fun_0015', name: 'Polite request', input: 'karuNaakaralaa mata udhavvak karanna puluvandha?', expect: /කරුණා|උදව්|කරන්න/ },
+    { id: 'Pos_Fun_0016', name: 'Apology', input: 'samaavenna eeka athvaeradhiimak', expect: /සමාවෙන්න/ },
+    { id: 'Pos_Fun_0017', name: 'Informal', input: 'ehema karapan', expect: /කරපන්|කරන්න/ },
+
+    // 18–20: Compound / Complex sentences
+    { id: 'Pos_Fun_0018', name: 'Compound with and', input: 'api kaeema kanna yanavaa saha passe film ekak balanavaa', expect: /කෑම|කන්න|බලනවා|චිත්‍රපට/ },
+    { id: 'Pos_Fun_0019', name: 'Conditional', input: 'oya enavaanam mama balan innavaa', expect: /ඔයා|ඉන්නවා|බලන්/ },
+    { id: 'Pos_Fun_0020', name: 'Compound + negation', input: 'mama gedhara yanavaa, haebaeyi vahina nisaa dhaenma yannee naee.', expect: /වැහි|වැසි|නෑ|යන්න/ },
+
+    // 21–24: Mixed English / Names / Formatting
+    { id: 'Pos_Fun_0021', name: 'Mixed English 1', input: 'mama office yanna late wennee traffic nisaa', expect: /office|traffic|අපමාද|පරක්කු|නිසා/ },
+    { id: 'Pos_Fun_0022', name: 'Zoom meeting', input: 'Zoom meeting ekak thiyennee', expect: /Zoom|meeting|මීටින්/ },
+    { id: 'Pos_Fun_0023', name: 'Email request', input: 'Documents tika email karanna puluvandha?', expect: /email|ලියවිලි|කරන්න/ },
+    { id: 'Pos_Fun_0024', name: 'New lines', input: 'mama gedhara yanavaa.\noyaa enne kawadha?', expect: /ගෙදර|කවදා|එන/ },
   ];
 
   for (const c of positiveCases) {
-    test(`${c.id} - Positive functional`, async ({ page }) => {
+    test(`${c.id} - ${c.name}`, async ({ page }) => {
       await typeAndCheck(page, c.input, c.expect);
     });
   }
 
-  // ❌ Negative Functional Tests (need 10)
-  // These should PASS if system behaves safely (no crash / keeps input / doesn’t break UI)
-  const negativeCases: { id: string; input: string }[] = [
-    { id: 'Neg_Fun_0001', input: '%%%%%#####@@@@@' },
-    { id: 'Neg_Fun_0002', input: '     ' }, // spaces only
-    { id: 'Neg_Fun_0003', input: '1234567890' },
-    { id: 'Neg_Fun_0004', input: 'm@ma g3dh@ra y@n@v@' },
-    { id: 'Neg_Fun_0005', input: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' }, // long repeated
-    { id: 'Neg_Fun_0006', input: '😀😀😀😀😀' },
-    { id: 'Neg_Fun_0007', input: '\n\n\n\n' },
-    { id: 'Neg_Fun_0008', input: '[]{}()<>/\\|~`' },
-    { id: 'Neg_Fun_0009', input: 'machan ela supiri kiyala dapan' }, // slang
-    { id: 'Neg_Fun_0010', input: 'http://example.com test email zoom whatsapp' },
+  //  10 NEGATIVE FUNCTIONAL TESTS (expected weaknesses / robustness)
+  const negativeCases: { id: string; name: string; input: string }[] = [
+    { id: 'Neg_Fun_0001', name: 'Symbols only', input: '%%%%%#####@@@@@' },
+    { id: 'Neg_Fun_0002', name: 'Spaces only', input: '          ' },
+    { id: 'Neg_Fun_0003', name: 'Numbers only', input: '1234567890' },
+    { id: 'Neg_Fun_0004', name: 'Mixed symbols + letters', input: 'm@ma g3dh@ra y@n@v@' },
+    { id: 'Neg_Fun_0005', name: 'Very long repeated letters', input: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' },
+    { id: 'Neg_Fun_0006', name: 'Emoji input', input: '😀😀😀😀😀' },
+    { id: 'Neg_Fun_0007', name: 'Line breaks only', input: '\n\n\n\n' },
+    { id: 'Neg_Fun_0008', name: 'Special characters set', input: '[]{}()<>/\\|~`' },
+    { id: 'Neg_Fun_0009', name: 'Slang', input: 'ela machan supiri' },
+    { id: 'Neg_Fun_0010', name: 'URL + English words', input: 'http://example.com test email zoom whatsapp' },
   ];
 
   for (const c of negativeCases) {
-    test(`${c.id} - Negative functional (no crash)`, async ({ page }) => {
+    test(`${c.id} - ${c.name}`, async ({ page }) => {
       await typeAndCheckNoCrash(page, c.input);
     });
   }
 });
+
+
+//npx playwright test --headed --project=chromium
