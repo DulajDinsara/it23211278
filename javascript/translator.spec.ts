@@ -40,53 +40,27 @@ async function typeAndCheckNoCrash(page: Page, inputText: string) {
 }
 
 test.describe('SwiftTranslator - Singlish to Sinhala Automated Tests', () => {
-  // UI test (required)
+  //  ONE Positive UI test (as assignment asks)
   test('Pos_UI_0001 - Output updates automatically', async ({ page }) => {
-    await typeAndCheck(page, 'mama gedhara yanavaa', /මම|මං|මන්|ගෙදර/);
+    await typeAndCheck(page, 'eka poddak amaaruyi vagee', /මම|මං|මන්|ගෙදර/);
   });
 
-  //  NEW Positive UI test
-  test('Pos_UI_0002 - Clear button clears Singlish input', async ({ page }) => {
-    await page.goto(URL, { waitUntil: 'domcontentloaded' });
+  //  ONE Negative UI test (as assignment asks)
+ test('Neg_UI_0001 - Translate with invalid symbols input (no crash)', async ({ page }) => {
+  await page.goto(URL, { waitUntil: 'domcontentloaded' });
 
-    const singlishInput = page.locator('textarea').first();
-    await expect(singlishInput).toBeVisible({ timeout: 15000 });
+  const singlishInput = page.locator('textarea').first();
+  await singlishInput.fill('%%%%%#####@@@@@');
 
-    await singlishInput.fill('mama gedhara yanavaa');
+  const translateBtn = page.getByRole('button', { name: /translate/i });
+  await translateBtn.click();
 
-    const clearBtn = page.getByRole('button', { name: /clear/i });
-    await clearBtn.click();
+  // UI should remain stable and responsive
+  await expect(page).toHaveURL(/swifttranslator\.com/i);
+});
 
-    await expect(singlishInput).toHaveValue('');
-    await expect(page).toHaveURL(/swifttranslator\.com/i);
-  });
 
-  //  NEW Negative UI test
-  test('Neg_UI_0001 - Translate clicked with empty input', async ({ page }) => {
-    await page.goto(URL, { waitUntil: 'domcontentloaded' });
-
-    const translateBtn = page.getByRole('button', { name: /translate/i });
-    await translateBtn.click();
-
-    // App should remain stable (no crash / no navigation away)
-    await expect(page).toHaveURL(/swifttranslator\.com/i);
-  });
-
-  //  NEW Negative UI test
-  test('Neg_UI_0002 - Rapid multiple Translate clicks', async ({ page }) => {
-    await page.goto(URL, { waitUntil: 'domcontentloaded' });
-
-    const translateBtn = page.getByRole('button', { name: /translate/i });
-
-    await translateBtn.click();
-    await translateBtn.click();
-    await translateBtn.click();
-
-    // Page should still be responsive and not crash
-    await expect(page).toHaveURL(/swifttranslator\.com/i);
-  });
-
-  // 25 POSITIVE FUNCTIONAL TESTS
+  //  25 POSITIVE FUNCTIONAL TESTS
   const positiveCases: { id: string; name: string; input: string; expect: RegExp }[] = [
     // 1–6: Simple / Daily language
     { id: 'Pos_Fun_0001', name: 'Simple sentence', input: 'mama gedhara yanavaa', expect: /මම|මං|මන්|ගෙදර/ },
@@ -124,7 +98,7 @@ test.describe('SwiftTranslator - Singlish to Sinhala Automated Tests', () => {
     { id: 'Pos_Fun_0023', name: 'Email request', input: 'Documents tika email karanna puluvandha?', expect: /email|ලියවිලි|කරන්න/ },
     { id: 'Pos_Fun_0024', name: 'New lines', input: 'mama gedhara yanavaa.\noyaa enne kawadha?', expect: /ගෙදර|කවදා|එන/ },
 
-    // 25: Long (stress test)
+    // 25: Long paragraph style
     {
       id: 'Pos_Fun_0025',
       name: 'Long news-style sentence (stress test)',
@@ -140,7 +114,7 @@ test.describe('SwiftTranslator - Singlish to Sinhala Automated Tests', () => {
     });
   }
 
-  // ❌ 10 NEGATIVE FUNCTIONAL TESTS (expected weaknesses / robustness)
+  //  10 NEGATIVE FUNCTIONAL TESTS (expected weaknesses / robustness)
   const negativeCases: { id: string; name: string; input: string }[] = [
     { id: 'Neg_Fun_0001', name: 'Symbols only', input: '%%%%%#####@@@@@' },
     { id: 'Neg_Fun_0002', name: 'Spaces only', input: '          ' },
