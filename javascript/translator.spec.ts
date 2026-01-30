@@ -113,4 +113,4 @@ test.describe('SwiftTranslator - Singlish to Sinhala Automated Tests', () => {
 });
 
 
-//npx playwright test --headed --project=chromium
+//      npx playwright test --headed --project=chromium
