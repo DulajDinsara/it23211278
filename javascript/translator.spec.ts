@@ -42,7 +42,7 @@ async function typeAndCheckNoCrash(page: Page, inputText: string) {
 test.describe('SwiftTranslator - Singlish to Sinhala Automated Tests', () => {
   //  ONE Positive UI test (as assignment asks)
   test('Pos_UI_0001 - Output updates automatically', async ({ page }) => {
-    await typeAndCheck(page, 'eka poddak amaaruyi vagee', /මම|මං|මන්|ගෙදර/);
+    await typeAndCheck(page, 'eka poddak amaaruyi vagee', /අමාරු|පොඩ්ඩක්|වගේ/);
   });
 
   //  ONE Negative UI test (as assignment asks)
