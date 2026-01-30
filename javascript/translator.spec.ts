@@ -83,6 +83,15 @@ test.describe('SwiftTranslator - Singlish to Sinhala Automated Tests', () => {
     { id: 'Pos_Fun_0022', name: 'Zoom meeting', input: 'Zoom meeting ekak thiyennee', expect: /Zoom|meeting|මීටින්/ },
     { id: 'Pos_Fun_0023', name: 'Email request', input: 'Documents tika email karanna puluvandha?', expect: /email|ලියවිලි|කරන්න/ },
     { id: 'Pos_Fun_0024', name: 'New lines', input: 'mama gedhara yanavaa.\noyaa enne kawadha?', expect: /ගෙදර|කවදා|එන/ },
+git status
+
+    {
+      id: 'Pos_Fun_0025',
+      name: 'Long news-style sentence (stress test)',
+      input:
+        'dhitvaa suLi kuNaatuva samaGa aethi vuu gQQvathura saha naayayaeem heethuven maarga sQQvarDhana aDhikaariya sathu maarga kotas 430k vinaashayata pathva aethi athara, ehi samastha dhiga pramaaNaya kiloomiitar 300k pamaNa vana bava pravaahana,mahaamaarga saha naagarika sQQvarDhana amaathYA bimal rathnaayaka saDHahan kaLeeya',
+      expect: /[අ-ෆ]/,
+    },
   ];
 
   for (const c of positiveCases) {
@@ -111,6 +120,5 @@ test.describe('SwiftTranslator - Singlish to Sinhala Automated Tests', () => {
     });
   }
 });
-
 
 //      npx playwright test --headed --project=chromium
